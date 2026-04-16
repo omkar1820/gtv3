@@ -1,0 +1,482 @@
+/* ===== RESET & ROOT ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --gta-gold: #f5c518;
+  --gta-orange: #ff6b00;
+  --gta-green: #00e676;
+  --gta-red: #ff1744;
+  --gta-blue: #00b0ff;
+  --gta-dark: #0a0a0a;
+  --gta-panel: rgba(0,0,0,0.78);
+  --gta-border: rgba(245,197,24,0.5);
+  --health-color: #76ff03;
+  --armor-color: #00b0ff;
+  --font-hud: 'Rajdhani', sans-serif;
+  --font-title: 'Orbitron', sans-serif;
+  --font-mono: 'Share Tech Mono', monospace;
+}
+
+html, body {
+  width: 100%; height: 100%; overflow: hidden;
+  background: #000; color: #fff;
+  font-family: var(--font-hud);
+  cursor: crosshair;
+  user-select: none;
+}
+
+canvas { display: block; }
+
+.hidden { display: none !important; }
+
+/* ===== LOADING SCREEN ===== */
+#loadingScreen {
+  position: fixed; inset: 0; z-index: 9999;
+  background: #000;
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column;
+}
+.load-city {
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(to top, #000 20%, transparent 60%),
+    linear-gradient(135deg, #0a0a1a 0%, #1a0a00 50%, #0a1a0a 100%);
+}
+.load-city::before {
+  content: '';
+  position: absolute; bottom: 0; left: 0; right: 0; height: 50%;
+  background:
+    /* building silhouettes */
+    linear-gradient(to top, #111 0%, transparent 100%);
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 400'%3E%3Crect x='0' y='200' width='60' height='200'/%3E%3Crect x='80' y='150' width='80' height='250'/%3E%3Crect x='180' y='100' width='50' height='300'/%3E%3Crect x='250' y='170' width='70' height='230'/%3E%3Crect x='340' y='80' width='90' height='320'/%3E%3Crect x='450' y='130' width='60' height='270'/%3E%3Crect x='530' y='60' width='100' height='340'/%3E%3Crect x='650' y='110' width='80' height='290'/%3E%3Crect x='750' y='90' width='70' height='310'/%3E%3Crect x='840' y='140' width='90' height='260'/%3E%3Crect x='950' y='80' width='60' height='320'/%3E%3Crect x='1030' y='160' width='80' height='240'/%3E%3Crect x='1130' y='120' width='70' height='280'/%3E%3C/svg%3E");
+  mask-size: 100% 100%;
+}
+.load-content {
+  position: relative; z-index: 2;
+  text-align: center; padding: 40px;
+}
+.rockstar-logo {
+  font-family: var(--font-title);
+  font-size: 4rem; font-weight: 900;
+  color: var(--gta-gold);
+  text-shadow: 0 0 40px var(--gta-gold);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+.gta-title {
+  font-family: var(--font-title);
+  font-size: 2.5rem; font-weight: 900; letter-spacing: 0.15em;
+  color: #fff;
+  text-shadow: 3px 3px 0 var(--gta-orange), 0 0 30px rgba(255,107,0,0.6);
+  margin: 10px 0 5px;
+}
+.load-tagline {
+  font-family: var(--font-hud);
+  font-size: 1rem; letter-spacing: 0.4em;
+  color: var(--gta-gold); opacity: 0.8; margin-bottom: 40px;
+}
+.load-bar-wrap {
+  width: 400px; max-width: 90vw; height: 4px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(245,197,24,0.3);
+  margin: 0 auto 15px;
+}
+.load-bar {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, var(--gta-orange), var(--gta-gold));
+  transition: width 0.3s ease;
+  box-shadow: 0 0 10px var(--gta-gold);
+}
+.load-text {
+  font-family: var(--font-mono); font-size: 0.75rem;
+  color: rgba(255,255,255,0.5); letter-spacing: 0.1em;
+}
+
+/* ===== MAIN MENU ===== */
+#mainMenu {
+  position: fixed; inset: 0;
+}
+#bgCanvas {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+}
+.menu-overlay {
+  position: relative; z-index: 2;
+  width: 100%; height: 100%;
+  display: flex; flex-direction: column;
+  align-items: flex-start; justify-content: center;
+  padding: 0 8vw;
+  background: linear-gradient(90deg, rgba(0,0,0,0.85) 40%, transparent 100%);
+}
+.menu-rockstar {
+  font-family: var(--font-title); font-size: 3rem; font-weight: 900;
+  color: var(--gta-gold);
+  text-shadow: 0 0 20px var(--gta-gold);
+}
+.menu-gta {
+  font-family: var(--font-title); font-size: clamp(2rem,5vw,4rem); font-weight: 900;
+  color: #fff; letter-spacing: 0.05em;
+  text-shadow: 4px 4px 0 var(--gta-orange), 0 0 40px rgba(255,107,0,0.5);
+  line-height: 1.1;
+}
+.menu-sub {
+  font-family: var(--font-hud); font-size: 1.1rem; font-weight: 700;
+  letter-spacing: 0.35em; color: var(--gta-gold);
+  margin: 5px 0 40px; opacity: 0.9;
+}
+.menu-nav {
+  display: flex; flex-direction: column; gap: 12px;
+}
+.menu-btn {
+  background: var(--gta-panel);
+  border: 1px solid var(--gta-border);
+  color: #fff;
+  font-family: var(--font-hud); font-size: 1.1rem; font-weight: 700;
+  letter-spacing: 0.15em;
+  padding: 14px 40px;
+  cursor: pointer; text-align: left;
+  min-width: 280px;
+  transition: all 0.15s ease;
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+  position: relative; overflow: hidden;
+}
+.menu-btn::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: var(--gta-gold); opacity: 0;
+  transition: opacity 0.15s;
+}
+.menu-btn:hover {
+  background: rgba(245,197,24,0.15);
+  border-color: var(--gta-gold);
+  color: var(--gta-gold);
+  transform: translateX(6px);
+}
+.menu-btn:hover::before { opacity: 1; }
+.menu-btn:active { transform: translateX(3px) scale(0.98); }
+.btn-icon { margin-right: 10px; }
+.menu-footer {
+  margin-top: 50px; display: flex; gap: 15px;
+  font-family: var(--font-mono); font-size: 0.7rem;
+  color: rgba(255,255,255,0.3);
+}
+
+/* ===== GAME SCREEN ===== */
+#gameScreen {
+  position: fixed; inset: 0;
+}
+#gameCanvas {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+}
+
+/* ===== HUD ===== */
+.hud {
+  position: absolute; inset: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+.hud-tl { position: absolute; top: 20px; left: 20px; }
+.hud-tr { position: absolute; top: 20px; right: 20px; text-align: right; }
+.hud-bl { position: absolute; bottom: 20px; left: 20px; }
+.hud-br { position: absolute; bottom: 20px; right: 20px; }
+
+/* Mission Panel */
+.mission-panel {
+  background: var(--gta-panel);
+  border: 1px solid var(--gta-border);
+  padding: 10px 15px; min-width: 260px;
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%);
+}
+.mission-label {
+  font-family: var(--font-mono); font-size: 0.6rem;
+  color: var(--gta-gold); letter-spacing: 0.2em;
+}
+.mission-name {
+  font-family: var(--font-hud); font-weight: 700; font-size: 1rem;
+  color: #fff; margin: 2px 0;
+}
+.mission-obj {
+  font-size: 0.8rem; color: rgba(255,255,255,0.7);
+  margin-bottom: 8px;
+}
+.mission-progress-bar {
+  height: 3px; background: rgba(255,255,255,0.15);
+}
+.mission-progress-bar div {
+  height: 100%; width: 0%;
+  background: var(--gta-gold);
+  transition: width 0.5s ease;
+  box-shadow: 0 0 6px var(--gta-gold);
+}
+
+/* Money & Wanted */
+.money-hud {
+  font-family: var(--font-hud); font-size: 2rem; font-weight: 700;
+  color: var(--gta-green);
+  text-shadow: 0 0 15px rgba(0,230,118,0.5);
+}
+.wanted-hud { margin-top: 5px; }
+.wanted-lbl {
+  font-family: var(--font-mono); font-size: 0.6rem;
+  color: var(--gta-gold); letter-spacing: 0.2em;
+  display: block;
+}
+#wantedStars {
+  font-size: 1.4rem; letter-spacing: 3px;
+  color: #333; text-shadow: none;
+}
+.time-hud {
+  font-family: var(--font-mono); font-size: 0.9rem;
+  color: rgba(255,255,255,0.6); margin-top: 8px;
+}
+.score-hud {
+  font-family: var(--font-hud); font-size: 0.85rem; font-weight: 600;
+  color: rgba(255,255,255,0.6);
+  letter-spacing: 0.1em; margin-top: 4px;
+}
+.score-hud span { color: var(--gta-gold); font-size: 1.1rem; }
+
+/* Vitals */
+.vitals { display: flex; flex-direction: column; gap: 8px; }
+.vital-row {
+  display: flex; align-items: center; gap: 8px;
+}
+.vital-icon { font-size: 1rem; width: 24px; text-align: center; }
+.vital-bar {
+  width: 160px; height: 8px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+}
+.vital-bar div {
+  height: 100%;
+  background: var(--health-color);
+  box-shadow: 0 0 8px var(--health-color);
+  transition: width 0.3s ease;
+}
+.vital-bar.armor div {
+  background: var(--armor-color);
+  box-shadow: 0 0 8px var(--armor-color);
+}
+.vital-num {
+  font-family: var(--font-mono); font-size: 0.85rem;
+  color: #fff; min-width: 30px; text-align: right;
+}
+
+/* Weapon HUD */
+.weapon-hud {
+  text-align: right; margin-bottom: 10px;
+  background: var(--gta-panel);
+  border: 1px solid var(--gta-border);
+  padding: 8px 14px;
+  clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%, 0 10px);
+}
+.weapon-icon { font-size: 2rem; display: block; }
+.ammo-display {
+  font-family: var(--font-mono); font-size: 1.1rem;
+  color: var(--gta-gold);
+}
+.weapon-name {
+  font-size: 0.65rem; letter-spacing: 0.2em;
+  color: rgba(255,255,255,0.5);
+}
+
+/* Minimap */
+.minimap-wrap {
+  position: relative; width: 160px; height: 160px;
+}
+#minimapCanvas {
+  position: absolute; inset: 0;
+  border-radius: 2px;
+}
+.minimap-frame {
+  position: absolute; inset: 0;
+  border: 2px solid var(--gta-gold);
+  box-shadow: 0 0 10px rgba(245,197,24,0.3), inset 0 0 10px rgba(0,0,0,0.5);
+  pointer-events: none;
+}
+
+/* Notifications */
+.notif-area {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex; flex-direction: column; gap: 8px;
+  align-items: center;
+  pointer-events: none;
+}
+.notif-item {
+  background: var(--gta-panel);
+  border-left: 3px solid var(--gta-gold);
+  padding: 8px 20px;
+  font-family: var(--font-hud); font-weight: 700;
+  font-size: 1rem; letter-spacing: 0.05em;
+  color: #fff;
+  animation: notifAnim 3s ease-out forwards;
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%);
+}
+.notif-item.success { border-color: var(--gta-green); }
+.notif-item.danger  { border-color: var(--gta-red); }
+
+@keyframes notifAnim {
+  0%   { opacity: 0; transform: translateY(-10px); }
+  15%  { opacity: 1; transform: translateY(0); }
+  75%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Controls hint */
+.controls-hint {
+  position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+  font-family: var(--font-mono); font-size: 0.65rem;
+  color: rgba(255,255,255,0.3);
+  display: flex; gap: 10px;
+}
+
+/* ===== PAUSE / OVERLAYS ===== */
+.overlay-dark {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.85);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 50;
+  pointer-events: all;
+}
+.pause-box {
+  background: var(--gta-panel);
+  border: 1px solid var(--gta-border);
+  padding: 40px 60px;
+  display: flex; flex-direction: column; gap: 15px;
+  min-width: 300px; align-items: center;
+  clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px));
+}
+.pause-title {
+  font-family: var(--font-title); font-size: 2rem;
+  color: var(--gta-gold); letter-spacing: 0.3em;
+  margin-bottom: 10px;
+}
+.pause-btn {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #fff; font-family: var(--font-hud); font-weight: 700;
+  font-size: 1rem; letter-spacing: 0.15em;
+  padding: 12px 40px; cursor: pointer; width: 100%;
+  transition: all 0.15s;
+}
+.pause-btn:hover {
+  border-color: var(--gta-gold); color: var(--gta-gold);
+  background: rgba(245,197,24,0.1);
+}
+
+/* Game Over */
+.wasted-container { text-align: center; }
+.wasted-text {
+  font-family: var(--font-title); font-size: clamp(3rem, 10vw, 7rem);
+  font-weight: 900; color: var(--gta-red);
+  text-shadow: 3px 3px 0 #800, 0 0 60px rgba(255,23,68,0.8);
+  letter-spacing: 0.2em;
+  animation: wastedAnim 0.5s ease-out;
+}
+@keyframes wastedAnim {
+  0% { transform: scale(0.5); opacity: 0; }
+  70% { transform: scale(1.05); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.gameover-stats {
+  font-family: var(--font-hud); font-size: 1.1rem;
+  color: rgba(255,255,255,0.7); margin: 20px 0;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.gameover-stats span { color: var(--gta-gold); font-weight: 700; }
+.gameover-btns { display: flex; gap: 15px; justify-content: center; margin-top: 10px; }
+
+/* ===== MODALS ===== */
+.modal-box {
+  background: #0d0d0d;
+  border: 1px solid var(--gta-border);
+  padding: 40px; min-width: 360px; max-width: 90vw;
+  max-height: 80vh; overflow-y: auto;
+  clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px));
+}
+.modal-box.wide { min-width: min(700px, 90vw); }
+.modal-title {
+  font-family: var(--font-title); font-size: 1.5rem;
+  color: var(--gta-gold); letter-spacing: 0.15em;
+  text-align: center; margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--gta-border);
+}
+.mt20 { margin-top: 20px; }
+
+/* Leaderboard */
+.lb-list { display: flex; flex-direction: column; gap: 8px; }
+.lb-item {
+  display: flex; align-items: center; gap: 15px;
+  padding: 10px 15px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  font-family: var(--font-hud);
+}
+.lb-rank {
+  font-family: var(--font-title); font-size: 1.2rem;
+  color: var(--gta-gold); min-width: 40px;
+}
+.lb-rank.top1 { color: #FFD700; }
+.lb-rank.top2 { color: #C0C0C0; }
+.lb-rank.top3 { color: #CD7F32; }
+.lb-name { flex: 1; font-weight: 700; font-size: 1rem; }
+.lb-score { color: var(--gta-green); font-weight: 700; font-size: 1.1rem; }
+
+/* Profile */
+.game-input {
+  width: 100%; padding: 12px 16px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--gta-border);
+  color: #fff; font-family: var(--font-hud); font-size: 1rem;
+  outline: none; margin-bottom: 15px;
+}
+.game-input:focus { border-color: var(--gta-gold); }
+.profile-info {
+  margin-top: 20px; padding: 15px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  font-family: var(--font-hud); font-size: 0.9rem;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.profile-info span { color: var(--gta-gold); }
+
+/* Garage */
+.garage-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 15px;
+}
+.garage-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.1);
+  padding: 20px 15px; text-align: center;
+  cursor: pointer; transition: all 0.15s;
+}
+.garage-card:hover {
+  border-color: var(--gta-gold);
+  background: rgba(245,197,24,0.08);
+}
+.garage-car-icon { font-size: 3rem; margin-bottom: 10px; }
+.garage-car-name {
+  font-family: var(--font-hud); font-weight: 700;
+  font-size: 0.85rem; letter-spacing: 0.1em;
+  color: #fff;
+}
+.garage-car-stat {
+  font-family: var(--font-mono); font-size: 0.7rem;
+  color: var(--gta-gold); margin-top: 5px;
+}
+.garage-card.locked {
+  opacity: 0.4; cursor: not-allowed;
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: #111; }
+::-webkit-scrollbar-thumb { background: var(--gta-gold); }

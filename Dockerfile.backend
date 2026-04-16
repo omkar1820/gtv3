@@ -1,0 +1,47 @@
+# ============================================================
+# GTA V Backend — Dockerfile (Multi-stage)
+# ============================================================
+
+# ── Stage 1: Dependencies ──────────────────────────────────
+FROM node:20-alpine AS deps
+
+WORKDIR /app
+
+# Install build deps for native modules
+RUN apk add --no-cache python3 make g++
+
+COPY backend/package*.json ./
+RUN npm ci --only=production && npm cache clean --force
+
+
+# ── Stage 2: Production ───────────────────────────────────
+FROM node:20-alpine AS production
+
+LABEL maintainer="gta5-game"
+LABEL description="GTA V Los Santos Online - Backend API"
+LABEL version="2.0.1"
+
+# Security: non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser  -S nodejs -u 1001
+
+WORKDIR /app
+
+# Copy deps from stage 1
+COPY --from=deps /app/node_modules ./node_modules
+
+# Copy source
+COPY backend/ ./
+COPY frontend/ ./frontend/
+
+# Ownership
+RUN chown -R nodejs:nodejs /app
+USER nodejs
+
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget -qO- http://localhost:3000/health || exit 1
+
+EXPOSE 3000
+
+CMD ["node", "server.js"]

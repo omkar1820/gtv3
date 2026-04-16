@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GTA V — Los Santos Online</title>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+  <!-- LOADING SCREEN -->
+  <div id="loadingScreen">
+    <div class="load-city"></div>
+    <div class="load-content">
+      <div class="rockstar-logo">R★</div>
+      <div class="gta-title">GRAND THEFT AUTO V</div>
+      <div class="load-tagline">LOS SANTOS • SAN ANDREAS</div>
+      <div class="load-bar-wrap"><div class="load-bar" id="loadBar"></div></div>
+      <div class="load-text" id="loadText">Initializing Los Santos...</div>
+    </div>
+  </div>
+
+  <!-- MAIN MENU -->
+  <div id="mainMenu" class="hidden">
+    <canvas id="bgCanvas"></canvas>
+    <div class="menu-overlay">
+      <div class="menu-logo">
+        <div class="menu-rockstar">R★</div>
+        <div class="menu-gta">GRAND THEFT AUTO V</div>
+        <div class="menu-sub">LOS SANTOS ONLINE</div>
+      </div>
+      <nav class="menu-nav">
+        <button class="menu-btn" onclick="startGame()"><span class="btn-icon">▶</span> NEW GAME</button>
+        <button class="menu-btn" onclick="showLeaderboard()"><span class="btn-icon">🏆</span> LEADERBOARD</button>
+        <button class="menu-btn" onclick="showGarage()"><span class="btn-icon">🚗</span> GARAGE</button>
+        <button class="menu-btn" onclick="showProfile()"><span class="btn-icon">👤</span> PROFILE</button>
+      </nav>
+      <div class="menu-footer">
+        <span>Build #482</span><span>•</span><span>Los Santos, SA</span><span>•</span><span id="onlinePlayers">247 Online</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div id="gameScreen" class="hidden">
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- HUD -->
+    <div class="hud">
+      <div class="hud-tl">
+        <div class="mission-panel" id="missionPanel">
+          <div class="mission-label">MISSION</div>
+          <div class="mission-name" id="missionName">Tutorial</div>
+          <div class="mission-obj" id="missionObj">Use WASD to move. Click to shoot.</div>
+          <div class="mission-progress-bar"><div id="missionFill"></div></div>
+        </div>
+      </div>
+
+      <div class="hud-tr">
+        <div class="money-hud">$<span id="moneyVal">50,000</span></div>
+        <div class="wanted-hud">
+          <span class="wanted-lbl">WANTED</span>
+          <div id="wantedStars">☆☆☆☆☆</div>
+        </div>
+        <div class="time-hud" id="gameTime">12:00</div>
+        <div class="score-hud">SCORE <span id="scoreVal">0</span></div>
+      </div>
+
+      <div class="hud-bl">
+        <div class="vitals">
+          <div class="vital-row">
+            <span class="vital-icon">❤️</span>
+            <div class="vital-bar"><div id="healthFill" style="width:100%"></div></div>
+            <span class="vital-num" id="healthVal">100</span>
+          </div>
+          <div class="vital-row">
+            <span class="vital-icon">🛡️</span>
+            <div class="vital-bar armor"><div id="armorFill" style="width:75%"></div></div>
+            <span class="vital-num" id="armorVal">75</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hud-br">
+        <div class="weapon-hud">
+          <div class="weapon-icon" id="weaponIcon">🔫</div>
+          <div class="ammo-display"><span id="ammoClip">30</span>/<span id="ammoTotal">120</span></div>
+          <div class="weapon-name" id="weaponName">PISTOL</div>
+        </div>
+        <div class="minimap-wrap">
+          <canvas id="minimapCanvas" width="160" height="160"></canvas>
+          <div class="minimap-frame"></div>
+        </div>
+      </div>
+
+      <div id="notifications" class="notif-area"></div>
+
+      <div class="controls-hint">
+        <span>WASD Move</span><span>•</span>
+        <span>Click Shoot</span><span>•</span>
+        <span>E Car</span><span>•</span>
+        <span>R Reload</span><span>•</span>
+        <span>1-3 Weapon</span><span>•</span>
+        <span>ESC Pause</span>
+      </div>
+    </div>
+
+    <!-- PAUSE MENU -->
+    <div id="pauseMenu" class="hidden overlay-dark">
+      <div class="pause-box">
+        <div class="pause-title">— PAUSED —</div>
+        <button class="pause-btn" onclick="resumeGame()">▶ RESUME</button>
+        <button class="pause-btn" onclick="saveGame()">💾 SAVE GAME</button>
+        <button class="pause-btn" onclick="quitToMenu()">🏠 MAIN MENU</button>
+      </div>
+    </div>
+
+    <!-- GAME OVER -->
+    <div id="gameOver" class="hidden overlay-dark">
+      <div class="wasted-container">
+        <div class="wasted-text">WASTED</div>
+        <div class="gameover-stats" id="gameoverStats"></div>
+        <div class="gameover-btns">
+          <button class="menu-btn" onclick="startGame()">↩ RETRY</button>
+          <button class="menu-btn" onclick="quitToMenu()">🏠 MENU</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODALS -->
+  <div id="leaderboardModal" class="hidden overlay-dark">
+    <div class="modal-box">
+      <div class="modal-title">🏆 TOP PLAYERS</div>
+      <div id="leaderboardList" class="lb-list"></div>
+      <button class="menu-btn mt20" onclick="closeModal('leaderboardModal')">CLOSE</button>
+    </div>
+  </div>
+
+  <div id="profileModal" class="hidden overlay-dark">
+    <div class="modal-box">
+      <div class="modal-title">👤 PLAYER PROFILE</div>
+      <input id="playerNameInput" class="game-input" placeholder="Enter your name..." maxlength="20"/>
+      <button class="menu-btn" onclick="saveProfile()">SAVE</button>
+      <div id="profileInfo" class="profile-info"></div>
+      <button class="menu-btn mt20" onclick="closeModal('profileModal')">CLOSE</button>
+    </div>
+  </div>
+
+  <div id="garageModal" class="hidden overlay-dark">
+    <div class="modal-box wide">
+      <div class="modal-title">🚗 GARAGE</div>
+      <div id="garageGrid" class="garage-grid"></div>
+      <button class="menu-btn mt20" onclick="closeModal('garageModal')">CLOSE</button>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>

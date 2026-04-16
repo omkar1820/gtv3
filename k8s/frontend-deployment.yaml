@@ -1,0 +1,165 @@
+# ═══════════════════════════════════════════════════════
+#  Kubernetes — Frontend Deployment + Ingress
+# ═══════════════════════════════════════════════════════
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gta5-frontend
+  namespace: gta5-game
+  labels:
+    app: gta5-frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: gta5-frontend
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: gta5-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: ghcr.io/your-org/gta5-game:latest-frontend
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+              name: http
+          resources:
+            requests:
+              cpu:    50m
+              memory: 64Mi
+            limits:
+              cpu:    200m
+              memory: 128Mi
+          livenessProbe:
+            httpGet:
+              path: /index.html
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /index.html
+              port: 80
+            initialDelaySeconds: 3
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gta5-frontend
+  namespace: gta5-game
+spec:
+  selector:
+    app: gta5-frontend
+  ports:
+    - port: 80
+      targetPort: 80
+      name: http
+  type: ClusterIP
+---
+# ── Ingress ──────────────────────────────────────────────
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gta5-ingress
+  namespace: gta5-game
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target:   /
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - gta5-game.example.com
+      secretName: gta5-tls
+  rules:
+    - host: gta5-game.example.com
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: gta5-backend
+                port:
+                  number: 3000
+          - path: /ws
+            pathType: Prefix
+            backend:
+              service:
+                name: gta5-backend
+                port:
+                  number: 3000
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: gta5-frontend
+                port:
+                  number: 80
+---
+# ── Redis ────────────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gta5-redis
+  namespace: gta5-game
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gta5-redis
+  template:
+    metadata:
+      labels:
+        app: gta5-redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          command: ["redis-server", "--appendonly", "yes"]
+          ports:
+            - containerPort: 6379
+          resources:
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          volumeMounts:
+            - mountPath: /data
+              name: redis-storage
+      volumes:
+        - name: redis-storage
+          persistentVolumeClaim:
+            claimName: redis-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-pvc
+  namespace: gta5-game
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: gta5-game
+spec:
+  selector:
+    app: gta5-redis
+  ports:
+    - port: 6379
+      targetPort: 6379

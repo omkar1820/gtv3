@@ -1,0 +1,147 @@
+# ============================================================
+# GTA V — Docker Compose (Full Stack)
+# Run: docker-compose up --build
+# ============================================================
+
+version: '3.9'
+
+services:
+
+  # ── Frontend (Nginx) ───────────────────────────────────────
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: gta5-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - gta5-net
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`gta5.local`)"
+
+  # ── Backend API (Node.js) ──────────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: gta5-backend
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV:    production
+      PORT:        3000
+      DB_HOST:     postgres
+      DB_PORT:     5432
+      DB_NAME:     gta5game
+      DB_USER:     gta5user
+      DB_PASSWORD: gta5pass
+      REDIS_URL:   redis://redis:6379
+      JWT_SECRET:  ${JWT_SECRET:-gta5-super-secret-jwt-key-change-in-prod}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - gta5-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  # ── PostgreSQL ─────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: gta5-postgres
+    environment:
+      POSTGRES_DB:       gta5game
+      POSTGRES_USER:     gta5user
+      POSTGRES_PASSWORD: gta5pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - gta5-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gta5user -d gta5game"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Redis ─────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: gta5-redis
+    command: redis-server --appendonly yes --maxmemory 128mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - gta5-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ── pgAdmin (DB UI) ────────────────────────────────────────
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: gta5-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL:    admin@gta5.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - gta5-net
+    restart: unless-stopped
+    profiles:
+      - tools   # Only starts with: docker-compose --profile tools up
+
+  # ── Redis Commander (Redis UI) ─────────────────────────────
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: gta5-redis-ui
+    environment:
+      REDIS_HOSTS: local:redis:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+    networks:
+      - gta5-net
+    restart: unless-stopped
+    profiles:
+      - tools
+
+# ── Volumes ────────────────────────────────────────────────
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+# ── Networks ───────────────────────────────────────────────
+networks:
+  gta5-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
